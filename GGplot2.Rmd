@@ -1,0 +1,174 @@
+---
+title: "Ejercicios S1-S2: dplyr y ggplot."
+output: learnr::tutorial
+runtime: shiny_prerendered
+description: "Ejercicios datos y gráficos."
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+
+library(tidyverse)
+library(kableExtra)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Introducción
+<div style="text-align: justify">
+El presente conjunto de ejercicios tienen como objetivo practicar lo que hemos visto en la parte de teoría sobre tratamiento de datos con el paquete dplyr y los gráficos ggplot.
+<div/>
+
+
+## Manejo de data frames 
+
+A partir de los datos de Salaries ve probando a hacer estas acciones usando tuberías y funciones de dplyr::
+
+```{r echo=FALSE,message=FALSE}
+library(car)
+data(Salaries)
+
+```
+
+> Resumen de los datos.
+
+```{r two-plus-0, exercise=TRUE,exercise.eval=TRUE}
+
+```
+
+```{r}
+summary(Salaries) %>% kable()
+```
+
+
+> Selecciona sólo las variables rango sexo y salario.
+
+```{r two-plus-1, exercise=TRUE,exercise.eval=TRUE}
+
+```
+
+**Resultado**
+
+```{r  echo=FALSE,eval=TRUE}
+Sal1 <- Salaries %>% dplyr::select(rank, sex,salary)
+Sal1 %>% head() %>% kable()
+```
+
+
+> Filtra por rango profesor.
+
+```{r two-plus-2, exercise=TRUE}
+
+```
+
+**Resultado**
+
+```{r echo=FALSE}
+SalProf <- Salaries %>% dplyr::filter(rank=="Prof")
+
+SalProf %>% head() %>% kable()
+```
+
+> Calcula medias por sexo (todos los datos).
+
+```{r two-plus-3, exercise=TRUE}
+
+```
+
+**Resultado**
+
+```{r echo=FALSE}
+meds <- Salaries %>% group_by(sex) %>% summarise(Med=mean(salary))
+meds %>% kable()
+```
+
+
+
+> Calcula salarios medios por rango y sexo (todos los datos).
+
+```{r two-plus-4, exercise=TRUE}
+
+```
+
+**Resultado**
+
+```{r echo=FALSE,message=FALSE}
+meds2 <- Salaries %>% group_by(rank,sex) %>% summarise(Meds=mean(salary))
+meds2 %>% kable()
+```
+
+> Pasa el salario a miles con un decimal.
+
+```{r two-plus-5, exercise=TRUE}
+
+```
+
+**Resultado**
+
+```{r echo=FALSE, message=FALSE}
+Salaries <- Salaries %>% mutate(salary_M=round(salary/1000,1))
+Salaries %>% head() %>% kable()
+
+```
+
+## Gráficos ggplot
+Continuamos con el mismo conjunto de datos. Vamos a realizar varios gráficos.
+
+> Grafica boxplots por rangos y por sexos.
+
+```{r two-plus-6, exercise=TRUE}
+
+```
+ **Resultado por rango**
+```{r echo=FALSE}
+
+ggplot(Salaries)+geom_boxplot(aes(y=salary_M,fill=rank))
+
+```
+
+**Resultado por sexo**
+
+```{r echo=FALSE}
+
+ggplot(Salaries)+geom_boxplot(aes(y=salary_M,fill=sex))
+
+```
+
+> Crea un factor que recoja rango y sexo simultáneamente y haz las gráfics de cajas.
+
+```{r two-plus-7, exercise=TRUE }
+
+```
+
+**Resultado**
+
+```{r echo=FALSE}
+Salaries %>% mutate(Rank_sex=factor(paste(rank,"_",sex,sep=""))) %>%
+ggplot()+geom_boxplot(aes(y=salary_M,fill=Rank_sex))
+
+```
+
+> Grafica la nube de puntos de salario frente a años desde el doctorado y divídelo por sexos.
+
+```{r two-plus-8, exercise=TRUE }
+
+```
+
+**Resultado con facetas**
+```{r echo=FALSE}
+ggplot(Salaries) + geom_point(aes(x=yrs.since.phd,y=salary,col=sex))+facet_wrap(~sex)
+
+```
+
+**Resultado sin facetas**
+
+```{r echo=FALSE}
+ggplot(Salaries) + geom_point(aes(x=yrs.since.phd,y=salary,col=sex))
+
+```
+
+> Modifica el aspecto del gráfico anterior.
+
+```{r two-plus-9, exercise=TRUE }
+
+```
