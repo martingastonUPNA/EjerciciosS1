@@ -7,7 +7,9 @@ description: "Ejercicios datos y gráficos."
 
 ```{r setup, include=FALSE}
 library(learnr)
-
+library(mvtnorm)
+library(GGally)
+library(ggforce )
 library(tidyverse)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
@@ -163,12 +165,145 @@ ggplot(Salaries) + geom_point(aes(x=yrs.since.phd,y=salary,col=sex))+facet_wrap(
 **Resultado sin facetas**
 
 ```{r echo=FALSE}
-ggplot(Salaries) + geom_point(aes(x=yrs.since.phd,y=salary,col=sex))
-
+g <- ggplot(Salaries) + geom_point(aes(x=yrs.since.phd,y=salary,col=sex))
+g
 ```
 
-> Modifica el aspecto del gráfico anterior.
+> Añade líneas de tendencia
 
 ```{r two-plus-9, exercise=TRUE }
 
 ```
+
+```{r echo=FALSE}
+g <- g+geom_smooth(aes(x = yrs.since.phd, y = salary, color = sex), method = "lm",
+    se = FALSE, linewidth = 1.5)
+g
+```
+
+
+> Modifica el aspecto del gráfico anterior. Hasta obtener el aspecto de abajo.
+
+
+
+```{r two-plus-10, exercise=TRUE }
+
+```
+
+
+```{r echo=FALSE}
+fd <- "#554d55"
+txt <- "white"
+g <- g+geom_smooth(aes(x = yrs.since.phd, y = salary, color = sex), method = "lm",
+    se = FALSE, linewidth = 1.5) + scale_color_manual(values = c("#55f7b5", 
+                                "#f755f7"))+ scale_y_continuous(label = scales::dollar) + ggtitle("Evolución del salario según años desde PhD")
+g + theme(plot.background = element_rect(fill = "#554d55"), plot.title = element_text(color=txt),
+                                                           panel.background = element_rect(fill=fd),
+                                                           panel.grid.major=element_line(color = txt),
+                                                           panel.grid.minor = element_line(color = txt),
+                                                           axis.title = element_text(color=txt),
+                                                           axis.text = element_text(color = txt),
+                                                           legend.background = element_rect(fill=fd),
+                                                           legend.box = element_blank(),
+                                                           legend.title=element_text(color = txt),
+                                                           legend.text = element_text(color = txt ))
+```
+
+
+
+> En el siguiente ejemplo tienes los datos generados para ilustrar la distanica de Mahalanobis. Realiza el gráfico correspondiente con el aspecto que se muestra al final 
+
+```{r two-plus-11, exercise=TRUE }
+library(mvtnorm)
+library(GGally)
+library(ggforce )
+library(MASS)
+set.seed(5)
+# Matriz de varianzas y covarianzas
+sigma<-rbind( c(1, 0.9), c(0.9,1))
+# Vector de medias
+mu<-c(5, 2)
+# generate the multivariate normal distribution
+df<-as.data.frame(mvrnorm(n=1000, mu=mu, Sigma=sigma))
+df <- df %>% rename(x=V1,y=V2)
+#Construimos la media
+meds <- df %>% summarize(mx=mean(x),my=mean(y))
+
+#Añadimos el ouliyer mahalanobissiano pero no euclidiano
+
+out <- data.frame(x=4,y=3)
+df <- rbind(df,out)
+
+dist_e <- sqrt(sum((meds-out)^2))
+
+#ggpairs(df)
+#vamos ahora a calcular una tercera variable que consiste en la distancia de mahalanobis de
+#cada punto al centro
+df$Maha <- mahalanobis(x=df,center=mu,cov=sigma)
+
+```
+
+
+
+**Gráfico final**
+
+```{r echo=FALSE}
+library(mvtnorm)
+library(GGally)
+library(ggforce )
+library(MASS)
+set.seed(5)
+# Matriz de varianzas y covarianzas
+sigma<-rbind( c(1, 0.9), c(0.9,1))
+# Vector de medias
+mu<-c(5, 2)
+# generate the multivariate normal distribution
+df<-as.data.frame(MASS::mvrnorm(n=1000, mu=mu, Sigma=sigma))
+df <- df %>% rename(x=V1,y=V2)
+#Construimos la media
+meds <- df %>% summarize(mx=mean(x),my=mean(y))
+
+#Añadimos el ouliyer mahalanobissiano pero no euclidiano
+
+out <- data.frame(x=4,y=3)
+df <- rbind(df,out)
+
+dist_e <- sqrt(sum((meds-out)^2))
+
+#ggpairs(df)
+#vamos ahora a calcular una tercera variable que consiste en la distancia de mahalanobis de
+#cada punto al centro
+df$Maha <- mahalanobis(x=df,center=mu,cov=sigma)
+
+g <- ggplot(df)+geom_point(aes(x=x,y=y)) +geom_point(data=meds,aes(x=mx,y=my),col="blue",size=2)+
+  geom_point(data=out,aes(x=x,y=y),col="blue",size=2)+
+  geom_circle(data=meds,aes(x0=mx,y0=my,r=dist_e))+coord_fixed()
+
+#g
+
+
+#g + geom_point(aes(x=x,y=y,color=Maha)) + scale_color_viridis_c(option="A")
+
+#g + geom_point(aes(x=x,y=y,color=Maha)) + scale_color_viridis_c(option="C")
+# Añadimos título
+fd <- "#67585c"
+txt <- "#f9cacc"
+#Gráfico de todos los datos Medios heatmaps
+colors <- colorRampPalette(c( "#255e42","#3a9065", "#afb749","#deed21","#ed7b21", "#ed2159"))
+g <- g + geom_point(aes(x=x,y=y,color=Maha)) + scale_color_gradientn(colours = colors(60))+
+  geom_point(data=meds,aes(x=mx,y=my),col="blue",size=2)+geom_circle(data=meds,aes(x0=mx,y0=my,r=dist_e),color=txt)
+
+
+g+ggtitle("Ilustración de distancia de Mahalanobis")+theme(plot.background = element_rect(fill = fd),
+                                                           plot.title = element_text(color=txt),
+                                                           panel.background = element_rect(fill=fd),
+                                                           panel.grid.major=element_line(color = txt),
+                                                           panel.grid.minor = element_line(color = txt),
+                                                           axis.title = element_text(color=txt),
+                                                           axis.text = element_text(color = txt),
+                                                           legend.background = element_rect(fill=fd),
+                                                           legend.title=element_text(color = txt),
+                                                           legend.text = element_text(color = txt ))
+
+```
+
